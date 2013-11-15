@@ -2,12 +2,12 @@
 <html lang="en">
 
   <head>
-    <link rel="stylesheet" type="text/css" href="styles.css">
-    <script src="lib/underscore.js" type="text/javascript" charset="utf-8"></script>
-    <script src="lib/omnom.js" type="text/javascript" charset="utf-8"></script>
-    <script src="lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
-    <script src="lib/d3.js" type="text/javascript" charset="utf-8"></script>
     <title>Om Nom</title>
+    <script src="../lib/underscore.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../lib/omnom.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../lib/d3.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
   </head>
 
   <body>
@@ -15,7 +15,7 @@
     <div id="grammar"></div>
     <div id="tree"></div>
 
-    <a href="https://github.com/calder/omnom"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
+    <a href="https://github.com/calder/omnom.js"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
 
   </body>
 
@@ -55,7 +55,7 @@
     var updateGrammar = function () {
       grammar.getSession().clearAnnotations()
 
-      try { parser = Parser(32, grammar.getValue()+"\n") }
+      try { parser = BNFParser(32, grammar.getValue()+"\n") }
       catch (e) {
         d3.select("#tree").classed("error", true)
         var pos = getPos(e.start, grammar.getValue()+"\n")

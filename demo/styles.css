@@ -2,7 +2,7 @@ html, body {
   margin: 0;
   height: 100%;
 
-  background: rgb(0,43,54);
+  background: #002B36;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
   font-size: 12px;
 }
