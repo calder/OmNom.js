@@ -1,0 +1,43 @@
+html, body {
+  margin: 0;
+  height: 100%;
+
+  background: rgb(0,43,54);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+  font-size: 12px;
+}
+
+#input, #grammar {
+  position: absolute;
+  right: 0;
+  height: 48%;
+  width: 50%;
+}
+#input   { top: 0; }
+#grammar { bottom: 0; }
+
+#tree {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+
+  overflow: scroll;
+}
+
+#tree.error {
+  opacity: 0.5;
+}
+
+#tree ul {
+  list-style: none;
+  padding-left: 1.5em;
+  text-align: left;
+}
+
+#tree a {
+  color: #657B83;
+}
+
+#tree a.token {
+  color: #FF7600;
+}

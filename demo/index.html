@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="lib/underscore.js" type="text/javascript" charset="utf-8"></script>
+    <script src="lib/omnom.js" type="text/javascript" charset="utf-8"></script>
+    <script src="lib/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="lib/d3.js" type="text/javascript" charset="utf-8"></script>
+    <title>Om Nom</title>
+  </head>
+
+  <body>
+    <div id="input"></div>
+    <div id="grammar"></div>
+    <div id="tree"></div>
+
+    <a href="https://github.com/calder/omnom"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
+
+  </body>
+
+  <script>
+    var grammar = ace.edit("grammar")
+    grammar.setTheme("ace/theme/solarized_dark")
+    grammar.getSession().setMode("ace/mode/ebnf")
+
+    var input = ace.edit("input")
+    input.setTheme("ace/theme/solarized_dark")
+    input.getSession().setMode("ace/mode/ebnf")
+
+    grammar.setValue('##################\n###   Tokens   ###\n##################\n\nsymbol  = "[a-zA-Z][\\w-]*\\??|=|\\+|-|\\*|/|<|>"\nstring  = "\\"([^\\\\\\"]*(\\\\.)?)*\\""\nint     = "\\d+"\nfloat   = "\\d*\\.\\d+|\\d+\\.\\d*"\nbool    = "#[tf]"\nquote   = "\\\'"\nop      = "\\("\ncp      = "\\)"\n        $ ";[^\\n]*"\n        $ "[ \\t\\n]+"\n        ! "\\d+\\w+"\n\n\n###################\n###   Symbols   ###\n###################\n\nINPUT       = EXPRESSION*\nEXPRESSION  = ATOM | LIST | LITERAL\nLITERAL     = $quote @EXPRESSION\nATOM        = symbol | string | int | float | bool\nLIST        = $op EXPRESSION* $cp')
+    grammar.clearSelection()
+
+    input.setValue("(car (cdr (cdr '(1 2 3))))")
+    input.setValue(";   ____            _   _                   _     \n;  / __ \\          | \\ | |                 (_)    \n; | |  | |_ __ ___ |  \\| | ___  _ __ ___    _ ___ \n; | |  | | '_ ` _ \\| . ` |/ _ \\| '_ ` _ \\  | / __|\n; | |__| | | | | | | |\\  | (_) | | | | | |_| \\__ \\\n;  \\____/|_| |_| |_|_| \\_|\\___/|_| |_| |_(_) |___/\n;                                         _/ |    \n;                A Jank Ass-Parser       |__/     \n; \n; The input BELOW is parsed by the grammar FARTHER\n; BELOW to generate the tree on the LEFT.\n; \n; WAT.\n\n\n(define divides?\n  (lambda (x y)\n    (= (modulo y x) 0)))\n\n(define divisors\n  (lambda (x)\n    (filter\n      (lambda (y) (divides? y x))\n      (range 2 (+ (sqrt x) 1)))))\n\n(define prime?\n  (lambda (x)\n    (empty? (divisors x))))\n\n(filter prime? (range 2 100))")
+    input.clearSelection()
+  </script>
+
+  <script>
+    var parser
+
+    var getPos = function (index, text) {
+      var row = 0
+      var col = 0
+      for (var i = 0; i < index; i++) {
+        col++
+        if (text.charAt(i) == "\n") {
+          row++
+          col = 0
+        }
+      }
+      return {row:row, col:col}
+    }
+
+    var updateGrammar = function () {
+      grammar.getSession().clearAnnotations()
+
+      try { parser = Parser(32, grammar.getValue()+"\n") }
+      catch (e) {
+        d3.select("#tree").classed("error", true)
+        var pos = getPos(e.start, grammar.getValue()+"\n")
+        grammar.getSession().setAnnotations([{
+          type: "error",
+          row:  pos.row,
+          text: e.type + " Error at col " + (pos.col+1),
+          html: e.type + " Error at col " + (pos.col+1),
+        }])
+        return
+      }
+
+      updateInput()
+    }
+
+    var updateInput = function () {
+      input.getSession().clearAnnotations()
+
+      var tree = parser(input.getValue()+"\n")
+      if (tree.error) {
+        d3.select("#tree").classed("error", true)
+        var pos = getPos(tree.error.start, input.getValue()+"\n")
+        input.getSession().setAnnotations([{
+          type: "error",
+          row:  pos.row,
+          text: tree.error.type + " Error at col " + (pos.col+1),
+          html: tree.error.type + " Error at col " + (pos.col+1),
+        }])
+        return
+      }
+
+      d3.select("#tree").classed("error", false)
+      d3.select("#tree").html("<ul><li><a class='symbol'>INPUT</a><ul></ul></li></ul>")
+      renderChildren(tree.children, d3.select("#tree ul li ul").selectAll("li"))
+    }
+
+    var renderChildren = function (children, nodes) {
+      var nodes = nodes.data(children)
+      var enter = nodes.enter().append("li")
+      var exit  = nodes.exit().remove()
+
+      enter.append("a")
+        .attr("class", function (c) { return c.text ? "token" : "symbol" })
+        .html(function (c) { return c.text ? nice(c.text) : c.symbol })
+
+      enter.append("ul")
+
+      nodes
+        .each(function (c) { renderChildren(c.children || [], d3.select(this).select("ul").selectAll("li")) })
+    }
+
+    var nice = function (s) {
+      return s
+        .replace("\n", "\\n")
+        .replace("\t", "\\t")
+    }
+
+    grammar.getSession().on("change", updateGrammar)
+    input.getSession().on("change", updateInput)
+    updateGrammar()
+  </script>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga')
+
+    ga('create', 'UA-42682119-1', 'omnomjs.org')
+    ga('send', 'pageview')
+  </script>
+
+</html>
